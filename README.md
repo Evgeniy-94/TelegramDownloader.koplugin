@@ -23,7 +23,7 @@ This plugin for [KOReader](https://github.com/koreader/koreader) allows you to s
 ## Установка
 
 1) Для получения токена отправьте боту [@BotFather](https://t.me/botfather) сообщение `/newbot` и следуйте дальнейшим инструкциям. [Подробная иструкция.](https://core.telegram.org/bots/features#creating-a-new-bot)
-2) Скачайте архив в плагином и разархивируйте его в папку `koreader/plugins`. 
+2) Скачайте архив в плагином и разархивируйте его в папку `koreader/plugins`. Папка с плагином должна называться `TelegramDownloader.koplugin`. Если название папки с плагином оканчивается на `-master` или имеет другое название, то переименуйте её.
 3) Откройте файл `main.lua` и вставьте свой токен в следующую строку:
    
     `local TOKEN = "INSERT_YOUR_API_TOKEN_HERE"`
