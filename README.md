@@ -5,10 +5,11 @@ This plugin for [KOReader](https://github.com/koreader/koreader) allows you to s
 ## Installation
 
 1) Obtain a Telegram bot API token by contacting [@BotFather](https://t.me/botfather) bot, sending the `/newbot` command and following the steps until you're given a new token. You can find a step-by-step guide [here](https://core.telegram.org/bots/features#creating-a-new-bot).
-2) Download the plugin, unzip it in the `koreader/plugins` directory.
-3) Open `main.lua` file and insert your API Token into next line:
+2) Download the plugin, unzip it in the `koreader/plugins` directory. The folder needs to be called `TelegramDownloader.koplugin` if the extracted folder ends with `-master` or a similar name. Rename it before copying it to your `koreader/plugins/` folder.
+3) Open `main.lua` file and insert your API Token into the next line:
    
     `local TOKEN = "INSERT_YOUR_API_TOKEN_HERE"`
+4) In `main.lua` file put your telegram user id on `local MY_TELEGRAM_USER_ID = YOUR_USER_ID_WITHOUT_QUOTES` without quotes, just the numbers. You can get your user ID with the [@userinfobot](https://t.me/UserInfoToBot) on telegram.
 
 ## Usage
 

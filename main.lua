@@ -10,6 +10,7 @@ local _ = require("gettext")
 local T = require("ffi/util").template
 
 local TOKEN = "INSERT_YOUR_API_TOKEN_HERE"
+local MY_TELEGRAM_USER_ID = YOUR_TELEGRAM_USER_ID_AS_WITHOUT_QUOTES
 
 local TelegramDownloader = WidgetContainer:extend{
     name = "TelegramDownloader",
@@ -39,7 +40,8 @@ end
 
 function TelegramDownloader:processUpdates(updates)
     for nouse, update in ipairs(updates.result) do
-        if update.message and update.message.document then
+ 		if update.message and update.message.document and update.message.from.id == MY_TELEGRAM_USER_ID then
+
             local fileId = update.message.document.file_id
             local fileName = update.message.document.file_name
             local fileData = self:downloadFile(fileId)
