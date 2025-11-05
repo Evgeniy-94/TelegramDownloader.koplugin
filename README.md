@@ -27,6 +27,7 @@ This plugin for [KOReader](https://github.com/koreader/koreader) allows you to s
 3) Откройте файл `main.lua` и вставьте свой токен в следующую строку:
    
     `local TOKEN = "INSERT_YOUR_API_TOKEN_HERE"`
+4) Там же вставьте свой user ID в строку `local MY_TELEGRAM_USER_ID = YOUR_USER_ID_WITHOUT_QUOTES`. Узнать свой user ID можно с помощью бота [@userinfobot](https://t.me/UserInfoToBot) .
 
 ## Использование
 
