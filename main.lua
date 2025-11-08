@@ -9,10 +9,10 @@ local json = require("json")
 local _ = require("gettext")
 local T = require("ffi/util").template
 
-local TOKEN = "8386296284:AAG2Rpw-niBPAZZDNR6cxYZ38iI2mfInlIo"
+local TOKEN = "TOKEN"
 
 local TelegramDownloader = WidgetContainer:extend{
-    name = 174216196,
+    name = NAME,
     is_doc_only = false,
 }
 
