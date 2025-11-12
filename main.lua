@@ -76,7 +76,7 @@ function TelegramDownloader:processUpdates(updates)
                                 self.ui:openFile(filePath)
                             end
                         end,
-                    })
+                    }, "full")
                 end
             end
         end
