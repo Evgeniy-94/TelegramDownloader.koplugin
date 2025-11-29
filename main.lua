@@ -3,28 +3,35 @@ local DataStorage = require("datastorage")
 local InfoMessage = require("ui/widget/infomessage")
 local ConfirmBox = require("ui/widget/confirmbox")
 local NetworkMgr = require("ui/network/manager")
+local LuaSettings = require("luasettings")
 local UIManager = require("ui/uimanager")
 local http = require("socket.http")
 local json = require("json")
 local _ = require("gettext")
 local T = require("ffi/util").template
 
-local TOKEN = "INSERT_YOUR_API_TOKEN_HERE"
-local USER_ID = YOUR_TELEGRAM_USER_ID_WITHOUT_QUOTES
-
 local TelegramDownloader = WidgetContainer:extend{
     name = "TelegramDownloader",
+    settings_file = DataStorage:getSettingsDir() .. "/telegramdownloader.lua",
     is_doc_only = false,
 }
 
 function TelegramDownloader:init()
-    self.tg_offset = G_reader_settings:readSetting("tg_offset") or 0
-    self.tg_dir = G_reader_settings:readSetting("tg_dir") or DataStorage:getFullDataDir()
+    self:loadSettings()
     self.ui.menu:registerToMainMenu(self)
 end
 
+function TelegramDownloader:loadSettings()
+    self.settings = LuaSettings:open(self.settings_file)
+    self.directory = self.settings:readSetting("directory", DataStorage:getFullDataDir())
+    self.offset = self.settings:readSetting("offset", 0)
+    self.token = self.settings:readSetting("token", "Insert your token here")
+    self.user_id = self.settings:readSetting("user_id", 12345)
+    self.settings:close()
+end
+
 function TelegramDownloader:getUpdates()
-    local url = string.format("https://api.telegram.org/bot%s/getUpdates?offset=%d", TOKEN, self.tg_offset)
+    local url = string.format("https://api.telegram.org/bot%s/getUpdates?offset=%d", self.token, self.offset)
     local response = http.request(url)
     if not response then
         return nil
@@ -33,7 +40,7 @@ function TelegramDownloader:getUpdates()
 end
 
 function TelegramDownloader:downloadFile(fileId)
-    local url = string.format("https://api.telegram.org/bot%s/getFile?file_id=%s", TOKEN, fileId)
+    local url = string.format("https://api.telegram.org/bot%s/getFile?file_id=%s", self.token, fileId)
     local response = http.request(url)
     if not response then
         return nil
@@ -45,7 +52,7 @@ function TelegramDownloader:downloadFile(fileId)
     end
     
     local filePath = result.result.file_path
-    local fileUrl = string.format("https://api.telegram.org/file/bot%s/%s", TOKEN, filePath)
+    local fileUrl = string.format("https://api.telegram.org/file/bot%s/%s", self.token, filePath)
     local fileResponse = http.request(fileUrl)
     return fileResponse
 end
@@ -54,14 +61,14 @@ function TelegramDownloader:processUpdates(updates)
     local foundFiles = false
     
     for nouse, update in ipairs(updates.result) do
-        if update.message and update.message.document and update.message.from.id == USER_ID then
+        if update.message and update.message.document and update.message.from.id == self.user_id then
             foundFiles = true
             local fileId = update.message.document.file_id
             local fileName = update.message.document.file_name
             local fileData = self:downloadFile(fileId)
             
             if fileData then
-                local filePath = self.tg_dir .. "/" .. fileName
+                local filePath = self.directory .. "/" .. fileName
                 local file = io.open(filePath, "wb")
                 if file then
                     file:write(fileData)
@@ -99,8 +106,9 @@ function TelegramDownloader:checkForNewFiles()
             })
             UIManager:forceRePaint()
             self:processUpdates(updates)
-            self.tg_offset = updates.result[#updates.result].update_id + 1
-            G_reader_settings:saveSetting("tg_offset", self.tg_offset)
+            self.offset = updates.result[#updates.result].update_id + 1
+            self.settings:saveSetting("offset", self.offset)
+            self.settings:close()
         else
             UIManager:show(InfoMessage:new{
                 text = _("There are no new files"),
@@ -121,14 +129,15 @@ function TelegramDownloader:addToMainMenu(menu_items)
         sub_item_table = {
             {
                 text_func = function()
-                    return string.format("Choose folder (%s)", self.tg_dir)
+                    return string.format("Choose folder (%s)", self.directory)
                 end,
                 keep_menu_open = true,
                 callback = function(touchmenu_instance)
                     require("ui/downloadmgr"):new{
                         onConfirm = function(path)
-                            self.tg_dir = path
-                            G_reader_settings:saveSetting("tg_dir", path)
+                            self.directory = path
+                            self.settings:saveSetting("directory", path)
+                            self.settings:close()
                             touchmenu_instance:updateItems()
                         end,
                     }:chooseDir()
@@ -137,10 +146,17 @@ function TelegramDownloader:addToMainMenu(menu_items)
             {
                 text = _("Download files"),
                 callback = function()
+                    self:loadSettings()
+                    if self.token == "Insert your token here" or self.user_id == 12345 then
+                        UIManager:show(InfoMessage:new{
+                            text = T(_("Please set the token and user_id in settings file\n%1"), self.settings_file),
+                        })
+                    else
                     local connect_callback = function()
                         self:checkForNewFiles()
                     end
                     NetworkMgr:runWhenConnected(connect_callback)
+                    end
                 end
             },
         }
