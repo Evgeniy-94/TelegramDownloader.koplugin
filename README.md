@@ -4,12 +4,17 @@ This plugin for [KOReader](https://github.com/koreader/koreader) allows you to s
 
 ## Installation
 
-1) Obtain a Telegram bot API token by contacting [@BotFather](https://t.me/botfather) bot, sending the `/newbot` command and following the steps until you're given a new token. You can find a step-by-step guide [here](https://core.telegram.org/bots/features#creating-a-new-bot).
-2) Download the plugin, unzip it in the `koreader/plugins` directory. The folder needs to be called `TelegramDownloader.koplugin` if the extracted folder ends with `-master` or a similar name. Rename it before copying it to your `koreader/plugins/` folder.
-3) Open `main.lua` file and insert your API Token inside quotes into the next line:
+1) Download the plugin, unzip it in the `koreader/plugins` directory. This is the only step needed if you are updating plugin.
+2) Obtain a Telegram bot API token by contacting [@BotFather](https://t.me/botfather) bot, sending the `/newbot` command and following the steps until you're given a new token. You can find a step-by-step guide [here](https://core.telegram.org/bots/features#creating-a-new-bot).
+3) Get your Telegram user_ID with [@userinfobot](https://t.me/UserInfoToBot) telegram bot.
+4) Create file `telegramdownloader.lua` in KOReader settings directory, or launch KOReader and try to use plugin to create this file automatically. In that file insert your API Token inside quotes and user_id without quotes as shown it the example:
    
-    `local TOKEN = "INSERT_YOUR_API_TOKEN_HERE"`
-4) In `main.lua` file put your telegram user id on `local USER_ID = YOUR_USER_ID_WITHOUT_QUOTES` without quotes, just the numbers. You can get your user ID with the [@userinfobot](https://t.me/UserInfoToBot) on telegram.
+  ```
+  return {
+      ["token"] = "Insert your token here",
+      ["user_id"] = 12345,
+  }
+  ```
 
 ## Usage
 
@@ -22,12 +27,17 @@ This plugin for [KOReader](https://github.com/koreader/koreader) allows you to s
 
 ## Установка
 
-1) Для получения токена отправьте боту [@BotFather](https://t.me/botfather) сообщение `/newbot` и следуйте дальнейшим инструкциям. [Подробная иструкция.](https://core.telegram.org/bots/features#creating-a-new-bot)
-2) Скачайте архив в плагином и разархивируйте его в папку `koreader/plugins`. Папка с плагином должна называться `TelegramDownloader.koplugin`. Если название папки с плагином оканчивается на `-master` или имеет другое название, то переименуйте её.
-3) Откройте файл `main.lua` и вставьте свой токен в кавычках в следующую строку:
-   
-    `local TOKEN = "INSERT_YOUR_API_TOKEN_HERE"`
-4) Там же вставьте свой user ID без кавычек в строку `local USER_ID = YOUR_USER_ID_WITHOUT_QUOTES`. Узнать свой user ID можно с помощью бота [@userinfobot](https://t.me/UserInfoToBot) .
+1) Скачайте архив в плагином и разархивируйте его в папку `koreader/plugins`. При обновлении плагина все остальные шаги не требуются.
+2) Для получения токена отправьте боту [@BotFather](https://t.me/botfather) сообщение `/newbot` и следуйте дальнейшим инструкциям. [Подробная иструкция.](https://core.telegram.org/bots/features#creating-a-new-bot)
+3) Узнайте свой Telegram user_id с помощью бота [@userinfobot](https://t.me/UserInfoToBot).
+4) Создайте файл `telegramdownloader.lua` в папку koreader/setting или попробуйте запустить этот плагин чтобы файл создался автоматически. В файле укажите сво API токен в кавычках и user_id без кавычек как показано в примере: 
+
+  ```
+  return {
+      ["token"] = "Insert your token here",
+      ["user_id"] = 12345,
+  }
+  ```
 
 ## Использование
 
