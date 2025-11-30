@@ -19,8 +19,8 @@ This plugin for [KOReader](https://github.com/koreader/koreader) allows you to s
 ## Usage
 
 1) You will find "TelegramDownloader" submenu item in the "tools" menu tab.
-2) Chose choose download folder.
-3) Send one or multiple files to your telegram bot.
+2) Choose download folder.
+3) Send one or multiple files to your telegram bot. Telegram allows files up to 20MB.
 4) Press "Download files" button in "TelegramDownloader" submenu.
 5) Wait for your files to be downloaded.
 
@@ -43,7 +43,7 @@ This plugin for [KOReader](https://github.com/koreader/koreader) allows you to s
 
 1) В верхнем меню во вкладке появится подпункт "TelegramDownloader".
 2) Укажите папку, в которую будут скачиваться файлы с помощью пункта "Choose folder".
-3) Отправьте файлы своему боту.
+3) Отправьте файлы своему боту. В телеграме есть ограничение на размер каждого файла в 20МБ.
 4) После нажатия кнопки "Download files" файлы будут скачаны в указанную папку.
 
 ##
