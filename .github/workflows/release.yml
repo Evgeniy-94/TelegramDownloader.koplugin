@@ -1,0 +1,43 @@
+name: ReleaseTest
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Create release archive
+        run: |
+          set -e
+          VERSION=${{ steps.version.outputs.version }}
+          ARCHIVE_NAME=${{ github.event.repository.name }}-v${VERSION}.zip
+          cd ..
+          rm -rf "${ARCHIVE_NAME}"
+          zip ${{ github.event.repository.name }}/${ARCHIVE_NAME} ${{ github.event.repository.name }}/*.lua
+          echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_ENV
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ env.archive_name }}
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
