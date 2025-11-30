@@ -34,26 +34,74 @@ function TelegramDownloader:getUpdates()
     local url = string.format("https://api.telegram.org/bot%s/getUpdates?offset=%d", self.token, self.offset)
     local response = http.request(url)
     if not response then
+        UIManager:show(InfoMessage:new{
+            text = _("Failed to connect to Telegram API"),
+        })
         return nil
     end
-    return json.decode(response)
+
+    local result = json.decode(response)
+    if not result then
+        UIManager:show(InfoMessage:new{
+            text = _("Invalid response from Telegram API (not JSON)"),
+        })
+        return nil
+    end
+
+    if not result.ok then
+        local desc = result.description or _("Unknown error")
+        UIManager:show(InfoMessage:new{
+            text = _("Telegram API error: %s"):format(desc),
+        })
+        return nil
+    end
+
+    return result
 end
 
 function TelegramDownloader:downloadFile(fileId)
     local url = string.format("https://api.telegram.org/bot%s/getFile?file_id=%s", self.token, fileId)
     local response = http.request(url)
     if not response then
+        UIManager:show(InfoMessage:new{
+            text = _("Failed to get file info from Telegram"),
+        })
         return nil
     end
     
     local result = json.decode(response)
+    if not result then
+        UIManager:show(InfoMessage:new{
+            text = _("Invalid response when fetching file info"),
+        })
+        return nil
+    end
+
+    if not result.ok then
+        local desc = result.description or _("Unknown error")
+        UIManager:show(InfoMessage:new{
+            text = _("Telegram file request failed: %s"):format(desc),
+        })
+        return nil
+    end
+
     if not result.result or not result.result.file_path then
+        UIManager:show(InfoMessage:new{
+            text = _("File path not found in Telegram response"),
+        })
         return nil
     end
     
     local filePath = result.result.file_path
     local fileUrl = string.format("https://api.telegram.org/file/bot%s/%s", self.token, filePath)
     local fileResponse = http.request(fileUrl)
+    if not fileResponse then
+        UIManager:show(InfoMessage:new{
+            text = _("Failed to download file from Telegram"),
+        })
+        return nil
+    end
+
     return fileResponse
 end
 
@@ -114,10 +162,6 @@ function TelegramDownloader:checkForNewFiles()
                 text = _("There are no new files"),
             })
         end
-    else
-        UIManager:show(InfoMessage:new{
-            text = _("Connection failed"),
-        })
     end
 end
 
