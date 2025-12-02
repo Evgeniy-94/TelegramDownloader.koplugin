@@ -148,6 +148,8 @@ function TelegramDownloader:checkForNewFiles()
     local updates = self:getUpdates()
 
     if updates and updates.result then
+
+
         if #updates.result > 0 then
             UIManager:show(InfoMessage:new{
                 text = _("Downloading. This might take a moment."),
@@ -155,6 +157,15 @@ function TelegramDownloader:checkForNewFiles()
             })
             UIManager:forceRePaint()
             self:processUpdates(updates)
+
+            UIManager:scheduleIn(0.5, function()
+                local FileManager = require("apps/filemanager/filemanager")
+                if FileManager.instance then
+                    FileManager.instance:onRefresh()
+                    UIManager:setDirty(FileManager.instance, "ui")
+                end
+            end)
+
             self.offset = updates.result[#updates.result].update_id + 1
             self.settings:saveSetting("offset", self.offset)
             self.settings:close()

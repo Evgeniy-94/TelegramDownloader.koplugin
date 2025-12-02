@@ -3,5 +3,5 @@ return {
     name = "telegramdownloader",
     fullname = _("TelegramDownloader"),
     description = _([[Plugin for downloading books using telegram bot]]),
-    version = "1.0.2",
+    version = "1.0.3",
 }
