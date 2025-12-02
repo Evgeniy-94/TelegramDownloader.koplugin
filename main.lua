@@ -25,8 +25,8 @@ function TelegramDownloader:loadSettings()
     self.settings = LuaSettings:open(self.settings_file)
     self.directory = self.settings:readSetting("directory", DataStorage:getFullDataDir())
     self.offset = self.settings:readSetting("offset", 0)
-    self.token = self.settings:readSetting("token", "Insert your token here")
-    self.user_id = self.settings:readSetting("user_id", 12345)
+    self.token = self.settings:readSetting("token", "")
+    self.user_id = self.settings:readSetting("user_id", "0")
     self.settings:close()
 end
 
@@ -109,7 +109,7 @@ function TelegramDownloader:processUpdates(updates)
     local foundFiles = false
     
     for nouse, update in ipairs(updates.result) do
-        if update.message and update.message.document and update.message.from.id == self.user_id then
+        if update.message and update.message.document and update.message.from.id == tonumber(self.user_id) then
             foundFiles = true
             local fileId = update.message.document.file_id
             local fileName = update.message.document.file_name
@@ -146,6 +146,7 @@ end
 
 function TelegramDownloader:checkForNewFiles()
     local updates = self:getUpdates()
+
     if updates and updates.result then
         if #updates.result > 0 then
             UIManager:show(InfoMessage:new{
@@ -188,23 +189,82 @@ function TelegramDownloader:addToMainMenu(menu_items)
                 end,
             },
             {
+                text = _("Telegram Bot configuration"),
+                keep_menu_open = true,
+                callback = function()
+                    self:loadSettings()
+                    local configuration_window
+                    configuration_window = require("ui/widget/multiinputdialog"):new{
+                        title = _("Telegram Bot configuration"),
+                        fields = {
+                            {
+                                description = _("Bot token"),
+                                text = self.token,
+                                hint = _("123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"),
+                            },
+                            {
+                                description = _("Your user ID"),
+                                text = self.user_id,
+                                hint = _("12345678"),
+                            },
+                        },
+                        buttons = {
+                            {
+                                {
+                                    text = _("Cancel"),
+                                    id = "close",
+                                    callback = function()
+                                        UIManager:close(configuration_window)
+                                    end
+                                },
+                                {
+                                    text = _("Info"),
+                                    callback = function()
+                                        UIManager:show(InfoMessage:new{
+                                            text = T(_("You can also change this settings in the file: %1"), self.settings_file),
+                                        })
+                                    end
+                                },
+                                {
+                                    text = _("Save"),
+                                    callback = function()
+                                        local fields = configuration_window:getFields()
+
+                                        if fields[1] ~= "" and tonumber(fields[2]) and tonumber(fields[2]) > 0 then
+                                            self.settings:saveSetting("token", fields[1])
+                                            self.settings:saveSetting("user_id", fields[2])
+                                            self.settings:close()
+
+                                            UIManager:show(InfoMessage:new{
+                                                text = _("Settings saved successfully"),
+                                            })
+                                            UIManager:close(configuration_window)
+                                        else
+                                            UIManager:show(InfoMessage:new{
+                                                text = T(_("Error. Invalid value.")),
+                                            })
+                                        end
+                                    end
+                                },
+                            },
+                        },
+                    }
+                    UIManager:show(configuration_window)
+                    configuration_window:onShowKeyboard()
+                end
+            },
+            {
                 text = _("Download files"),
                 callback = function()
                     self:loadSettings()
-                    if self.token == "Insert your token here" or self.user_id == 12345 then
-                        UIManager:show(InfoMessage:new{
-                            text = T(_("Please set the token and user_id in settings file\n%1"), self.settings_file),
-                        })
-                    else
-                    local connect_callback = function()
-                        self:checkForNewFiles()
+                        local connect_callback = function()
+                            self:checkForNewFiles()
+                        end
+                        NetworkMgr:runWhenConnected(connect_callback)
                     end
-                    NetworkMgr:runWhenConnected(connect_callback)
-                    end
-                end
-            },
+                },
+            }
         }
-    }
-end
+    end
 
 return TelegramDownloader
