@@ -1,4 +1,5 @@
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
+local Dispatcher = require("dispatcher")
 local DataStorage = require("datastorage")
 local InfoMessage = require("ui/widget/infomessage")
 local ConfirmBox = require("ui/widget/confirmbox")
@@ -17,8 +18,34 @@ local TelegramDownloader = WidgetContainer:extend{
 }
 
 function TelegramDownloader:init()
+    self:onDispatcherRegisterActions()
     self:loadSettings()
     self.ui.menu:registerToMainMenu(self)
+end
+
+-- Expose "Download files" as a Dispatcher action so it can be bound to a
+-- gesture or used by alternative UIs (e.g. quick-access panels) without the
+-- Tools menu being visible.
+function TelegramDownloader:onDispatcherRegisterActions()
+    Dispatcher:registerAction("telegram_download_files", {
+        category = "none",
+        event = "TelegramDownloadFiles",
+        title = _("Telegram: download files"),
+        general = true,
+    })
+end
+
+-- Shared entry point used by both the menu item and the Dispatcher action.
+function TelegramDownloader:downloadFiles()
+    self:loadSettings()
+    NetworkMgr:runWhenConnected(function()
+        self:checkForNewFiles()
+    end)
+end
+
+function TelegramDownloader:onTelegramDownloadFiles()
+    self:downloadFiles()
+    return true
 end
 
 function TelegramDownloader:loadSettings()
@@ -267,15 +294,11 @@ function TelegramDownloader:addToMainMenu(menu_items)
             {
                 text = _("Download files"),
                 callback = function()
-                    self:loadSettings()
-                        local connect_callback = function()
-                            self:checkForNewFiles()
-                        end
-                        NetworkMgr:runWhenConnected(connect_callback)
-                    end
-                },
-            }
-        }
-    end
+                    self:downloadFiles()
+                end,
+            },
+        },
+    }
+end
 
 return TelegramDownloader
