@@ -48,13 +48,67 @@ function TelegramDownloader:onTelegramDownloadFiles()
     return true
 end
 
+local function parseUserIds(value)
+    local user_ids = {}
+    local seen = {}
+    local is_valid = true
+
+    local function addUserId(user_id)
+        local text = tostring(user_id):match("^%s*(.-)%s*$")
+        if text == "" then
+            return
+        end
+
+        local id = text:match("^%d+$") and tonumber(text)
+        if not id or id <= 0 then
+            is_valid = false
+            return
+        end
+
+        if not seen[id] then
+            seen[id] = true
+            table.insert(user_ids, id)
+        end
+    end
+
+    if type(value) == "table" then
+        for _, user_id in ipairs(value) do
+            addUserId(user_id)
+        end
+    elseif value ~= nil then
+        for user_id in tostring(value):gmatch("[^,]+") do
+            addUserId(user_id)
+        end
+    end
+
+    return user_ids, is_valid
+end
+
 function TelegramDownloader:loadSettings()
     self.settings = LuaSettings:open(self.settings_file)
     self.directory = self.settings:readSetting("directory", DataStorage:getFullDataDir())
     self.offset = self.settings:readSetting("offset", 0)
     self.token = self.settings:readSetting("token", "")
-    self.user_id = self.settings:readSetting("user_id", "0")
+    local configured_user_ids = self.settings:readSetting("user_ids")
+    if configured_user_ids == nil then
+        configured_user_ids = self.settings:readSetting("user_id")
+    end
+    self.user_ids = parseUserIds(configured_user_ids)
     self.settings:close()
+end
+
+function TelegramDownloader:isUserAuthorized(user_id)
+    user_id = tonumber(user_id)
+    if not user_id then
+        return false
+    end
+
+    for _, authorized_id in ipairs(self.user_ids) do
+        if user_id == authorized_id then
+            return true
+        end
+    end
+    return false
 end
 
 function TelegramDownloader:getUpdates()
@@ -136,7 +190,8 @@ function TelegramDownloader:processUpdates(updates)
     local foundFiles = false
     
     for nouse, update in ipairs(updates.result) do
-        if update.message and update.message.document and update.message.from.id == tonumber(self.user_id) then
+        if update.message and update.message.document and update.message.from
+                and self:isUserAuthorized(update.message.from.id) then
             foundFiles = true
             local fileId = update.message.document.file_id
             local fileName = update.message.document.file_name
@@ -241,9 +296,9 @@ function TelegramDownloader:addToMainMenu(menu_items)
                                 hint = _("123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"),
                             },
                             {
-                                description = _("Your user ID"),
-                                text = self.user_id,
-                                hint = _("12345678"),
+                                description = _("Authorized user IDs (comma-separated)"),
+                                text = table.concat(self.user_ids, ","),
+                                hint = _("12345678,87654321"),
                             },
                         },
                         buttons = {
@@ -267,10 +322,11 @@ function TelegramDownloader:addToMainMenu(menu_items)
                                     text = _("Save"),
                                     callback = function()
                                         local fields = configuration_window:getFields()
+                                        local user_ids, valid_user_ids = parseUserIds(fields[2])
 
-                                        if fields[1] ~= "" and tonumber(fields[2]) and tonumber(fields[2]) > 0 then
+                                        if fields[1] ~= "" and valid_user_ids and #user_ids > 0 then
                                             self.settings:saveSetting("token", fields[1])
-                                            self.settings:saveSetting("user_id", fields[2])
+                                            self.settings:saveSetting("user_ids", user_ids)
                                             self.settings:close()
 
                                             UIManager:show(InfoMessage:new{
